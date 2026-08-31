@@ -20,7 +20,7 @@ def volume_momentum():
     df_excel = pd.read_csv("AllOptionsStocks.csv")
     #df_excel = pd.read_csv("AllOptionsStocks-All.csv")
     #df_excel = pd.read_csv('Nifty100.csv')
-    backtesting_flag= True
+    backtesting_flag= False
     backtesting_result=pd.DataFrame()
     for item in time_intervals:
         data = download_data(item,df_excel,backtesting_flag)
