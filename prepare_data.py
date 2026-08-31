@@ -3,8 +3,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime , timedelta, date
 import yfinance as yf
-from datetime import datetime, date, timedelta
-from Sendnotification import send_telegram_notification
+from datetime import datetime, date, timedelta
 from ModelBuilder import calculate_rsi, calculate_vwap
 import time
 import pytz
