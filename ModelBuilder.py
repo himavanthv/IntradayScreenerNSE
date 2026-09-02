@@ -50,7 +50,7 @@ def volume_indication(data,candleInterval,backtesting_flag):
         rsi_high=80
         rsi_low=20
     if candleInterval =='15m':
-        exit_after_candles = 15
+        exit_after_candles = 25
         value_of_candle = 50000000
         enter_after_candles = 2
         candle_change=1.5
@@ -116,8 +116,10 @@ def volume_indication(data,candleInterval,backtesting_flag):
         #bearish_indices = np.where((data['DistanceBetween_Close_SMA125']<=-1) & (data['DistanceFromMA9_Open']>=-1) & (data['DistanceBetween_Close_SMA125']>=-5) & (data['MaVariance_Month']<-1) & (data['RSI_50']<35) & ((data['CrossOver']==-1) | (data['CrossOver'].shift(-1)==-1) | (data['CrossOver'].shift(-2)==-1)| (data['CrossOver'].shift(-3)==-1)| (data['CrossOver'].shift(-4)==-1)| (data['CrossOver'].shift(-5)==-1)| (data['CrossOver'].shift(-6)==-1)| (data['CrossOver'].shift(-7)==-1)| (data['CrossOver'].shift(-8)==-1)| (data['CrossOver'].shift(-9)==-1)| (data['CrossOver'].shift(-10)==-1)| (data['CrossOver'].shift(-11)==-1)| (data['CrossOver'].shift(-12)==-1)| (data['CrossOver'].shift(-13)==-1)))[0].tolist()    
         ######### Currently Over Sold and Over Bought will work only on 15 M due to candle limits in YahooFinance for lower candles
         ############ Below logic is valid only for 15 Minute Candles #########
-        bullish_indices = np.where((data['DistanceBetweenClose_SMA650'] < -10) & (data['RSI_25']<=30) & (data['MaVariance_Month15']<=-2) & ((data['CrossOver']==1) | (data['CrossOver'].shift(-1)==1) | (data['CrossOver'].shift(-2)==1) | (data['CrossOver'].shift(-3)==1) | (data['CrossOver'].shift(-4)==1) | (data['CrossOver'].shift(-5)==1)))[0].tolist()
-        bearish_indices = np.where((data['DistanceBetweenClose_SMA650'] > 10) & (data['RSI_25']>=70) & (data['MaVariance_Month15']>=2) & ((data['CrossOver']==-1) | (data['CrossOver'].shift(-1)==-1) | (data['CrossOver'].shift(-2)==-1) | (data['CrossOver'].shift(-3)==-1) | (data['CrossOver'].shift(-4)==-1) | (data['CrossOver'].shift(-5)==-1)))[0].tolist()
+        bullish_indices = np.where((data['DistanceBetweenClose_SMA650'] < -10) & (data['RSI_25']<=30) & (data['Volume']*data['Open'] >= value_of_candle) & (data['MaVariance_Month15']<=-2) & (data['CandleChange'] >= 0.5))[0].tolist()
+        bearish_indices = np.where((data['DistanceBetweenClose_SMA650'] > 10) & (data['RSI_25']>=70) & (data['Volume']*data['Open'] >= value_of_candle) & (data['MaVariance_Month15']>=2) & (data['CandleChange'] <= -0.5))[0].tolist()
+        #bullish_indices = np.where((data['CandleChange'] >= 0.5) & (data['DistanceBetweenClose_SMA650'] > 5) & (data['DistanceBetweenOpen_SMA225']<=1) & (data['Open']>data['SMA_225']) & (data['Volume']*data['Open'] >= value_of_candle) & (data['RSI_25']>=60) & (data['RSI_25']<=90))[0].tolist()
+        #bearish_indices = np.where((data['CandleChange'] <= -0.5) & (data['DistanceBetweenClose_SMA650'] < 5) & (data['DistanceBetweenOpen_SMA225']>=-1) & (data['Open']<data['SMA_225']) & (data['Volume']*data['Open'] >= value_of_candle) & (data['RSI_25']<=40) & (data['RSI_25']<=10))[0].tolist()
 
     
     bullish_found_rows = data.iloc[bullish_indices]
@@ -158,8 +160,8 @@ def volume_indication(data,candleInterval,backtesting_flag):
             bearish_rows['Type'] ='Sell'
             swing_trade_rows = bearish_rows
             ticker_trade_rows=pd.concat([swing_trade_rows,ticker_trade_rows], ignore_index=True)
-        #if len(ticker_trade_rows) >=1:
-            #ticker_trade_rows.loc[ticker_trade_rows['Profit'] < -500, 'Profit'] = -500
+        if len(ticker_trade_rows) >=1:
+            ticker_trade_rows.loc[ticker_trade_rows['Profit'] < -500, 'Profit'] = -500
         return ticker_trade_rows                
     elif backtesting_flag and (candleInterval=='5m'or candleInterval=='15m' or candleInterval=='30m' or candleInterval=='60m'):
         for row in trading_rows.itertuples():

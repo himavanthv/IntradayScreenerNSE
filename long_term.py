@@ -10,8 +10,8 @@ from pathlib import Path
 
 
 
-candleInterval='5m'
-dir_path=Path('/home/osboxes/Documents/Intraday-API/Data/Minute5C')
+candleInterval='15m'
+dir_path=Path('/home/osboxes/Documents/Intraday-API/Data/Minute15C')
 #dir_path=Path('/home/osboxes/Documents/Intraday-API/Data/Minute15C')
 backtesting_result=pd.DataFrame()
 print(f'Start Time {str(datetime.now())}')
@@ -24,6 +24,8 @@ for item in dir_path.iterdir():
         df.columns = ['Date','Open','High','Low','Close','Volume']
         df["SMA_9"] = df['Close'].rolling(window=9,min_periods=9).mean()
         df["SMA_26"] = df['Close'].rolling(window=26,min_periods=26).mean()
+        df["SMA_5"] = df['Close'].rolling(window=5,min_periods=5).mean()
+        df["SMA_15"] = df['Close'].rolling(window=15,min_periods=15).mean()
         df["SMA_50"] = df['Close'].rolling(window=50,min_periods=50).mean()
         df['RSI']=calculate_rsi(df['Close'],14)
         df['RSI_Change'] = (df['RSI'].shift(1).rolling(window=5).sum())/5
@@ -34,6 +36,7 @@ for item in dir_path.iterdir():
         df['MaVariance'] = ((df['SMA_9'] - df['SMA_26'])/df['SMA_26'])*100
         df['CandleChange'] = ((df['Close'] - df['Open'])/df['Open'])*100
         df['Sum_CandleChange'] = (df['CandleChange'].shift(1).rolling(window=20).sum())/20
+        df['RSI_Small'] = calculate_rsi(df['Close'],3)
         if candleInterval != '1d' and candleInterval!='60m':
             #df["SMA_125"] = df['Close'].rolling(window=375,min_periods=375).mean()
             #df["SMA_2500"] = df['Close'].rolling(window=7500,min_periods=7500).mean()
@@ -48,12 +51,11 @@ for item in dir_path.iterdir():
             #df['MaVariance_Month'] = ((df['SMA_125']-df['SMA_2500'])/df['SMA_2500'])*100
             #df['RSI_50']=calculate_rsi(df['Close'],50)
             #df['RSI50_Change'] = (df['RSI_50'].shift(1).rolling(window=10).sum())/10
-
-        
         bullish_condition = (df['SMA_9'].shift(1) < df['SMA_26'].shift(1)) & (df['SMA_9'] > df['SMA_26'])
         bearish_condition = (df['SMA_9'].shift(1) > df['SMA_26'].shift(1)) & (df['SMA_9'] < df['SMA_26'])
-        bullish_condition1 = (df['SMA_26'].shift(1) < df['SMA_50'].shift(1)) & (df['SMA_26'] > df['SMA_50'])
-        bearish_condition1 = (df['SMA_26'].shift(1) > df['SMA_50'].shift(1)) & (df['SMA_26'] < df['SMA_50'])
+        bullish_condition1 = (df['SMA_5'].shift(1) < df['SMA_15'].shift(1)) & (df['SMA_5'] > df['SMA_15'])
+        bearish_condition1 = (df['SMA_5'].shift(1) > df['SMA_15'].shift(1)) & (df['SMA_5'] < df['SMA_15'])
+        df['CrossOver_Small'] = bullish_condition1.astype(int) - bearish_condition1.astype(int)
         df['CrossOver'] = bullish_condition.astype(int) - bearish_condition.astype(int)
         df['CrossOver1'] = bullish_condition1.astype(int) - bearish_condition1.astype(int)
         df['DateStr'] = df['Date'].str[:10]
