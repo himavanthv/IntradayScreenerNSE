@@ -31,7 +31,7 @@ def calculate_rsi(data, window):
     rsi = 100 - (100 / (1 + rs))
     return rsi
 
-def volume_indication(data,candleInterval,backtesting_flag):
+def volume_indication(data,candleInterval,backtesting_flag,tradeType):
     data['Candle_Interval']=candleInterval
     data['Model']='VolumeBased'
 ## ------------------ Configuration Based on Different Candle Intervals -----------------##
@@ -50,7 +50,7 @@ def volume_indication(data,candleInterval,backtesting_flag):
         rsi_high=80
         rsi_low=20
     if candleInterval =='15m':
-        exit_after_candles = 25
+        exit_after_candles = 50
         value_of_candle = 50000000
         enter_after_candles = 2
         candle_change=1.5
@@ -79,7 +79,7 @@ def volume_indication(data,candleInterval,backtesting_flag):
     capital = 10000
     gap_today = 1
     intraday_capital = capital*5
-    if candleInterval !='1d':
+    if tradeType =='intraday':
         total_taxes = (intraday_capital*2)*0.00032
         total_brokerage = 20 # Algo flat charges # manual 40 Rs
     else:
@@ -87,47 +87,35 @@ def volume_indication(data,candleInterval,backtesting_flag):
         total_taxes = 0
         total_brokerage = 0 # Algo flat charges # manual 40 Rs
     ticker_trade_rows = pd.DataFrame()
-    if candleInterval =='1d':
-        ##### 1 day interval is for Positional/Swing for Momentum
-        #bullish_indices = np.where((data['DistanceFromMA9_Open']<=1) & (data['RSI']>60) & (data['MaVariance']<=1) & (data['MaVariance']>=0) & (data['MaVariance']<=10) & (data['Gap_Open']<3) & (data['RSI']>data['RSI_Change']) & ((data['CrossOver']==1) | (data['CrossOver'].shift(-1)==1) | (data['CrossOver'].shift(-2)==1)| (data['CrossOver'].shift(-3)==0)| (data['CrossOver'].shift(-4)==0)| (data['CrossOver'].shift(-5)==0)| (data['CrossOver'].shift(-6)==0)| (data['CrossOver'].shift(-7)==0)| (data['CrossOver'].shift(-8)==0)| (data['CrossOver'].shift(-9)==0)))[0].tolist()
-        #bearish_indices = np.where((data['DistanceFromMA9_Open']>=-1) & (data['RSI']<40) & (data['MaVariance']>=-1) & (data['MaVariance']<=0) & (data['MaVariance']>=-10) & (data['Gap_Open']<3) & (data['RSI']<data['RSI_Change']) & ((data['CrossOver']==-1) | (data['CrossOver'].shift(-1)==-1) | (data['CrossOver'].shift(-2)==-1)| (data['CrossOver'].shift(-3)==0)| (data['CrossOver'].shift(-4)==0)| (data['CrossOver'].shift(-5)==0)| (data['CrossOver'].shift(-6)==0)| (data['CrossOver'].shift(-7)==0)| (data['CrossOver'].shift(-8)==0)| (data['CrossOver'].shift(-9)==0)))[0].tolist()
-        ##### Over Bought and Over Sold
-        #bullish_indices = np.where((data['DistanceFromMA9_Close'] <-5) & (data['RSI']<30) & (data['MaVariance']<=-7) & (data['RSI']<=30) & ((data['CrossOver']==1) | (data['CrossOver'].shift(-1)==1) | (data['CrossOver'].shift(-2)==1)| (data['CrossOver'].shift(-3)==1)| (data['CrossOver'].shift(-4)==1)| (data['CrossOver'].shift(-5)==1)| (data['CrossOver'].shift(-6)==1)| (data['CrossOver'].shift(-7)==1)| (data['CrossOver'].shift(-8)==1)| (data['CrossOver'].shift(-9)==1)))[0].tolist()
-        #bearish_indices = np.where((data['DistanceFromMA9_Close'] >5) & (data['RSI']>70) & (data['MaVariance']>=7) & (data['RSI']>=70) & ((data['CrossOver']==-1) | (data['CrossOver'].shift(-1)==-1) | (data['CrossOver'].shift(-2)==-1)| (data['CrossOver'].shift(-3)==-1)| (data['CrossOver'].shift(-4)==-1)| (data['CrossOver'].shift(-5)==-1)| (data['CrossOver'].shift(-6)==-1)| (data['CrossOver'].shift(-7)==-1)| (data['CrossOver'].shift(-8)==-1)| (data['CrossOver'].shift(-9)==-1)))[0].tolist()
-        bullish_indices = np.where((data['DistanceFromMA9_Close'] <-5) & (data['MaVariance']<=-5) & (data['RSI']<=30) & ((data['CrossOver']==1) | (data['CrossOver'].shift(-1)==0) | (data['CrossOver'].shift(-2)==0)| (data['CrossOver'].shift(-3)==0)| (data['CrossOver'].shift(-4)==0)| (data['CrossOver'].shift(-5)==0)| (data['CrossOver'].shift(-6)==0)))[0].tolist()
-        bearish_indices = np.where((data['DistanceFromMA9_Close'] >5) & (data['MaVariance']>=5) & (data['RSI']>=70) & ((data['CrossOver']==-1) | (data['CrossOver'].shift(-1)==0) | (data['CrossOver'].shift(-2)==0)| (data['CrossOver'].shift(-3)==0)| (data['CrossOver'].shift(-4)==0)| (data['CrossOver'].shift(-5)==0)| (data['CrossOver'].shift(-6)==0)))[0].tolist()
-        ### For checking only Indexes
-        #bullish_indices = np.where((data['RSI']<=30) & ((data['CrossOver']==0) | (data['CrossOver'].shift(-1)==0) | (data['CrossOver'].shift(-2)==0)| (data['CrossOver'].shift(-3)==0)| (data['CrossOver'].shift(-4)==0)| (data['CrossOver'].shift(-5)==0)))[0].tolist()
-        #bearish_indices = np.where((data['RSI']>=70) & ((data['CrossOver']==0) | (data['CrossOver'].shift(-1)==0) | (data['CrossOver'].shift(-2)==0)| (data['CrossOver'].shift(-3)==0)| (data['CrossOver'].shift(-4)==0)| (data['CrossOver'].shift(-5)==0)))[0].tolist()
+    if tradeType =='swing':
+        bullish_indices_oversell = np.where((data['DistanceBetweenClose_SMA650'] < -10) & (data['RSI_25']<=30) & (data['Volume']*data['Open'] >= value_of_candle) & (data['MaVariance_Month15']<=-2) & (data['CandleChange'].shift(-1)>= 0.25) & (data['CandleChange'] >= 0.5))[0].tolist()
+        bearish_indices_overbuy = np.where((data['DistanceBetweenClose_SMA650'] > 10) & (data['RSI_25']>=70) & (data['Volume']*data['Open'] >= value_of_candle) & (data['MaVariance_Month15']>=2) & (data['CandleChange'] <= -0.5) & (data['CandleChange'].shift(-1) <= -0.25))[0].tolist()
+        bullish_indices_bullreturn = np.where((data['MaVariance_Month15']>5) & (data['DistanceBetweenOpen_SMA225']<0) & (data['DistanceBetweenOpen_SMA225']>=-5) & (data['RSI_25']<=25) & (data['Volume']*data['Open'] >= value_of_candle) & (data['CandleChange'].shift(-1)>= 0.25) & (data['CandleChange'] >= 0.5))[0].tolist()
+        bearish_indices_bearreturn = np.where((data['MaVariance_Month15']<-5) & (data['DistanceBetweenOpen_SMA225']>0) & (data['DistanceBetweenOpen_SMA225']<=5) & (data['RSI_25']>=75) & (data['Volume']*data['Open'] >= value_of_candle) & (data['CandleChange'] <= -0.5) & (data['CandleChange'].shift(-1) <= -0.25))[0].tolist()
+        bullish_indices_meanRSI = np.where((data['MaVariance_Month15']>4) & (data['RSI_25']<=30))[0].tolist()
+        bearish_indices_meanRSI = np.where((data['MaVariance_Month15']<-4) & (data['RSI_25']>=70))[0].tolist()        
+        #bullish_indices= bullish_indices_oversell + bullish_indices_bullreturn + bullish_indices_meanRSI
+        #bearish_indices= bearish_indices_overbuy + bearish_indices_bearreturn + bearish_indices_meanRSI
+        bullish_indices= bullish_indices_meanRSI
+        bearish_indices= bearish_indices_meanRSI
     else:
-        ############## - All below are for Intraday   
-        ############## - OverBought and OverSold - ###############
-        #bullish_indices = np.where((data['DistanceBetween_Close_SMA125'] < -3) & (data['RSI_50']<=30) & (data['MaVariance_Month']<=-5) & ((data['CrossOver']==1) | (data['CrossOver'].shift(-1)==1) | (data['CrossOver'].shift(-2)==1)| (data['CrossOver'].shift(-3)==1)| (data['CrossOver'].shift(-4)==1)| (data['CrossOver'].shift(-5)==1)| (data['CrossOver'].shift(-6)==1)| (data['CrossOver'].shift(-7)==1)| (data['CrossOver'].shift(-8)==1)| (data['CrossOver'].shift(-9)==1)| (data['CrossOver'].shift(-10)==1)| (data['CrossOver'].shift(-11)==1)| (data['CrossOver'].shift(-12)==1)| (data['CrossOver'].shift(-13)==1)))[0].tolist()
-        #bearish_indices = np.where((data['DistanceBetween_Close_SMA125'] > 3) & (data['RSI_50']>=70) & (data['MaVariance_Month']>=5) & ((data['CrossOver']==1) | (data['CrossOver'].shift(-1)==-1) | (data['CrossOver'].shift(-2)==-1)| (data['CrossOver'].shift(-3)==-1)| (data['CrossOver'].shift(-4)==-1)| (data['CrossOver'].shift(-5)==-1)| (data['CrossOver'].shift(-6)==-1)| (data['CrossOver'].shift(-7)==-1)| (data['CrossOver'].shift(-8)==-1)| (data['CrossOver'].shift(-9)==-1)| (data['CrossOver'].shift(-10)==-1)| (data['CrossOver'].shift(-11)==-1)| (data['CrossOver'].shift(-12)==-1)| (data['CrossOver'].shift(-13)==-1)))[0].tolist()
-        ########### - Volume Momentum based on High Sell or High Buy and Candle Value - #########
-        #bullish_indices = np.where((data['CandleChange'] >= 0.5) & (data['MaVariance'] >= 0) & (data['CandleChange'] <= 0.8) & (data['CandleChange'] > data['Sum_CandleChange']) & (data['DistanceFromMA9_Bull']>0) & (data['DistanceFromMA9_Bull']<=0.3) & (data['Volume']>=data['SumOfVolume']) & (data['Volume']*data['Open'] >= value_of_candle) & (((data['Close']-data['PrevClose'])/data['PrevClose'])*100 >= 0.5) & (data['Gap_Open'] <= gap_today) & (((data['Close'] - data['PrevClose'])/data['PrevClose'])*100 <= 1))[0].tolist()
-        #bearish_indices = np.where((data['CandleChange'] <= -0.5) & (data['MaVariance'] <= 0) & (data['CandleChange'] >= -0.8) & (data['CandleChange'] < data['Sum_CandleChange']) & (data['DistanceFromMA9_Bear']>0) & (data['DistanceFromMA9_Bear']<=0.3) & (data['Volume']>=data['SumOfVolume']) & (data['Volume']*data['Open'] >= value_of_candle) & (((data['Close']-data['PrevClose'])/data['PrevClose'])*100 <= -0.5) & (data['Gap_Open'] <= gap_today) & (((data['Close'] - data['PrevClose'])/data['PrevClose'])*100 >= -1))[0].tolist()
-        #bullish_indices = np.where((data['CandleChange'] >= 0.25) &  (data['Volume'] > data['SumOfVolume']) & (data['DistanceBetween_Close_SMA125'] > -0.25 ) & (data['DistanceBetween_Close_SMA125'] < 0.5 ) & (data['Volume']*data['Open'] >= value_of_candle) & (data['Open'] > data['Close']))[0].tolist()
-        #bearish_indices = np.where((data['CandleChange'] <= -0.25) & (data['Volume'] > data['SumOfVolume']) & (data['DistanceBetween_Close_SMA125'] < 0.25 ) & (data['DistanceBetween_Close_SMA125'] > -0.5 ) & (data['Volume']*data['Open'] >= value_of_candle) & (data['Close'] > data['Open']))[0].tolist()
-        #bullish_indices = np.where((data['DistanceBetween_Close_SMA125'] < -2) & (data['DistanceBetween_Close_SMA125'] > -4) & (data['MaVariance'] <= -0.25) & (data['RSI_50']<=25) & (data['SMA_2500']<data['Close']))[0].tolist()
-        #bearish_indices = np.where((data['DistanceBetween_Close_SMA125'] > 2) & (data['DistanceBetween_Close_SMA125'] < 4) & (data['MaVariance'] >= 0.25) & (data['RSI_50']>=75) & (data['SMA_2500']>data['Close']))[0].tolist()
-        # Momentum
-        #bullish_indices = np.where((data['DistanceBetween_Close_SMA125']>=1) & (data['DistanceFromMA9_Open']<=1) & (data['DistanceBetween_Close_SMA125']<=5) &  (data['MaVariance_Month']>1) & (data['RSI_50']>65) & ((data['CrossOver']==1) | (data['CrossOver'].shift(-1)==1) | (data['CrossOver'].shift(-2)==1)| (data['CrossOver'].shift(-3)==1)| (data['CrossOver'].shift(-4)==1)| (data['CrossOver'].shift(-5)==1)| (data['CrossOver'].shift(-6)==1)| (data['CrossOver'].shift(-7)==1)| (data['CrossOver'].shift(-8)==1)| (data['CrossOver'].shift(-9)==1)| (data['CrossOver'].shift(-10)==1)| (data['CrossOver'].shift(-11)==1)| (data['CrossOver'].shift(-12)==1)| (data['CrossOver'].shift(-13)==1)))[0].tolist()
-        #bearish_indices = np.where((data['DistanceBetween_Close_SMA125']<=-1) & (data['DistanceFromMA9_Open']>=-1) & (data['DistanceBetween_Close_SMA125']>=-5) & (data['MaVariance_Month']<-1) & (data['RSI_50']<35) & ((data['CrossOver']==-1) | (data['CrossOver'].shift(-1)==-1) | (data['CrossOver'].shift(-2)==-1)| (data['CrossOver'].shift(-3)==-1)| (data['CrossOver'].shift(-4)==-1)| (data['CrossOver'].shift(-5)==-1)| (data['CrossOver'].shift(-6)==-1)| (data['CrossOver'].shift(-7)==-1)| (data['CrossOver'].shift(-8)==-1)| (data['CrossOver'].shift(-9)==-1)| (data['CrossOver'].shift(-10)==-1)| (data['CrossOver'].shift(-11)==-1)| (data['CrossOver'].shift(-12)==-1)| (data['CrossOver'].shift(-13)==-1)))[0].tolist()    
-        ######### Currently Over Sold and Over Bought will work only on 15 M due to candle limits in YahooFinance for lower candles
-        ############ Below logic is valid only for 15 Minute Candles #########
-        bullish_indices = np.where((data['DistanceBetweenClose_SMA650'] < -10) & (data['RSI_25']<=30) & (data['Volume']*data['Open'] >= value_of_candle) & (data['MaVariance_Month15']<=-2) & (data['CandleChange'] >= 0.5))[0].tolist()
-        bearish_indices = np.where((data['DistanceBetweenClose_SMA650'] > 10) & (data['RSI_25']>=70) & (data['Volume']*data['Open'] >= value_of_candle) & (data['MaVariance_Month15']>=2) & (data['CandleChange'] <= -0.5))[0].tolist()
-        #bullish_indices = np.where((data['CandleChange'] >= 0.5) & (data['DistanceBetweenClose_SMA650'] > 5) & (data['DistanceBetweenOpen_SMA225']<=1) & (data['Open']>data['SMA_225']) & (data['Volume']*data['Open'] >= value_of_candle) & (data['RSI_25']>=60) & (data['RSI_25']<=90))[0].tolist()
-        #bearish_indices = np.where((data['CandleChange'] <= -0.5) & (data['DistanceBetweenClose_SMA650'] < 5) & (data['DistanceBetweenOpen_SMA225']>=-1) & (data['Open']<data['SMA_225']) & (data['Volume']*data['Open'] >= value_of_candle) & (data['RSI_25']<=40) & (data['RSI_25']<=10))[0].tolist()
+        #bullish_indices_oversell = np.where((data['DistanceBetweenClose_SMA650'] < -10) & (data['RSI_25']<=30) & (data['Volume']*data['Open'] >= value_of_candle) & (data['MaVariance_Month15']<=-2) & (data['CandleChange'] >= 0.5) & (data['CandleChange'].shift(-1)>= 0.25))[0].tolist()
+        #bearish_indices_overbuy = np.where((data['DistanceBetweenClose_SMA650'] > 10) & (data['RSI_25']>=70) & (data['Volume']*data['Open'] >= value_of_candle) & (data['MaVariance_Month15']>=2) & (data['CandleChange'] <= -0.5) & (data['CandleChange'].shift(-1) <= -0.25))[0].tolist()
+        #bullish_indices_bullreturn = np.where((data['MaVariance_Month15']>5) & (data['DistanceBetweenOpen_SMA225']<0) & (data['DistanceBetweenOpen_SMA225']>=-5) & (data['RSI_25']<=25) & (data['Volume']*data['Open'] >= value_of_candle) & (data['CandleChange'].shift(-1)>= 0.25) & (data['CandleChange'] >= 0.5))[0].tolist()
+        #bearish_indices_bearreturn = np.where((data['MaVariance_Month15']<-5) & (data['DistanceBetweenOpen_SMA225']>0) & (data['DistanceBetweenOpen_SMA225']<=5) & (data['RSI_25']>=75) & (data['Volume']*data['Open'] >= value_of_candle) & (data['CandleChange'] <= -0.5) & (data['CandleChange'].shift(-1) <= -0.25))[0].tolist() 
+        bullish_indices_meanRSI = np.where((data['MaVariance_Month15']>4) & (data['RSI_25']<=30))[0].tolist()
+        bearish_indices_meanRSI = np.where((data['MaVariance_Month15']<-4) & (data['RSI_25']>=70))[0].tolist()        
+        #bullish_indices= bullish_indices_oversell + bullish_indices_bullreturn + bullish_indices_meanRSI
+        #bearish_indices= bearish_indices_overbuy + bearish_indices_bearreturn + bearish_indices_meanRSI
+        bullish_indices= bullish_indices_meanRSI
+        bearish_indices = bearish_indices_meanRSI
 
-    
     bullish_found_rows = data.iloc[bullish_indices]
-    bearish_found_rows = data.iloc[bearish_indices]
+    bearish_found_rows = data.iloc[bearish_indices]    
     bullish_found_rows['Type'] = 'Buy'
     bearish_found_rows['Type'] = 'Sell'
     trading_rows = pd.concat([bullish_found_rows,bearish_found_rows], ignore_index=True)
-    if backtesting_flag and candleInterval=='1d':
+    if backtesting_flag and tradeType=='swing':
         for item in bullish_indices:
             bullish_entry_index = item - enter_after_candles
             bullish_rows = data.iloc[[bullish_entry_index]]
@@ -163,7 +151,7 @@ def volume_indication(data,candleInterval,backtesting_flag):
         if len(ticker_trade_rows) >=1:
             ticker_trade_rows.loc[ticker_trade_rows['Profit'] < -500, 'Profit'] = -500
         return ticker_trade_rows                
-    elif backtesting_flag and (candleInterval=='5m'or candleInterval=='15m' or candleInterval=='30m' or candleInterval=='60m'):
+    elif backtesting_flag and tradeType=='intraday':
         for row in trading_rows.itertuples():
             od_data = data[(data['DateStr'] == row.DateStr)]
             if row.Type == 'Buy':

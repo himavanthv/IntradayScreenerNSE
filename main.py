@@ -19,8 +19,10 @@ def volume_momentum():
     #df_excel = pd.read_csv("AllOptionsStocks-Test.csv")
     #df_excel = pd.read_csv("AllOptionsStocks.csv")
     #df_excel = pd.read_csv("AllOptionsStocks-All.csv")
-    df_excel = pd.read_csv('Nifty100.csv')
+    #df_excel = pd.read_csv('Nifty100.csv')
+    df_excel = pd.read_csv('OptionsAll.csv')
     backtesting_flag= False
+    tradeType='intraday'
     backtesting_result=pd.DataFrame()
     for item in time_intervals:
         data = download_data(item,df_excel,backtesting_flag)
@@ -35,7 +37,7 @@ def volume_momentum():
                 print(f'Error {e} occurred for ticker {ticker}')
                 continue
             try:
-                backtesting_result = pd.concat([backtesting_result, volume_indication(df,item,backtesting_flag).drop_duplicates(subset=['DateStr'], keep='first')], ignore_index=True)
+                backtesting_result = pd.concat([backtesting_result, volume_indication(df,item,backtesting_flag,tradeType).drop_duplicates(subset=['DateStr'], keep='first')], ignore_index=True)
             except Exception as e:
                 print(f"Backtesting failed for {ticker}")
                 print(f"Error {e}")
