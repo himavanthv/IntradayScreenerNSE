@@ -30,7 +30,7 @@ def volume_momentum():
         for ticker in tickers_list:
             df=pd.DataFrame()
             try:
-                df = single_data(data,ticker, item)
+                df = single_data(data,ticker,item,'main')
                 if len(df) ==0:
                     continue
             except Exception as e: 
@@ -38,6 +38,7 @@ def volume_momentum():
                 continue
             try:
                 backtesting_result = pd.concat([backtesting_result, volume_indication(df,item,backtesting_flag,tradeType).drop_duplicates(subset=['DateStr'], keep='first')], ignore_index=True)
+                #backtesting_result = pd.concat([backtesting_result, volume_indication(df,item,backtesting_flag,tradeType)], ignore_index=True)
             except Exception as e:
                 print(f"Backtesting failed for {ticker}")
                 print(f"Error {e}")
@@ -53,6 +54,8 @@ def volume_momentum():
         print(formatted_payload)
         #current_time_ist = datetime.now(ist_timezone)
         #send_telegram_notification("Analysis report at Time:"+ current_time_ist.strftime("%H:%M:%S") +" for interval "+candleInterval +"\n"+formatted_payload)
+
+
 def ma_crossover():
     time_intervals=['60m','1d']
     #df_excel = pd.read_csv("AllOptionsStocks-Test.csv")
@@ -74,7 +77,7 @@ def ma_crossover():
                 print(f"Error {e}")
                 continue
     if backtesting_flag:
-        backtesting_result.to_csv(f'BackTesting_result_MACross_{candleInterval}.csv')
+        backtesting_result.to_csv(f'BackTesting_result_MACross_{candleInterval}_{tradeType}.csv')
         print('Completed and saved to BackTesting_result')
     else:
         print(backtesting_result)

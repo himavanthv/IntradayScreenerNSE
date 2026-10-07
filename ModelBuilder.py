@@ -35,47 +35,14 @@ def volume_indication(data,candleInterval,backtesting_flag,tradeType):
     data['Candle_Interval']=candleInterval
     data['Model']='VolumeBased'
 ## ------------------ Configuration Based on Different Candle Intervals -----------------##
-    if candleInterval=='1m':
-        exit_after_candles=120
-        value_of_candle = 20000000
-        enter_after_candles = 1
-        candle_change=1
-        rsi_high=90
-        rsi_low=10
-    if candleInterval=='5m':
-        exit_after_candles = 300
-        candle_change=1
-        value_of_candle = 100000000
-        enter_after_candles = 2
-        rsi_high=80
-        rsi_low=20
     if candleInterval =='15m':
-        exit_after_candles = 50
+        exit_after_candles = 125
         value_of_candle = 50000000
-        enter_after_candles = 2
+        enter_after_candles = 1
         candle_change=1.5
         rsi_high=80
         rsi_low=20
-    if candleInterval =='30m':
-        candle_change=1.5
-        exit_after_candles = 20
-        value_of_candle = 100000000
-        enter_after_candles = 1
-        rsi_high=80
-        rsi_low=20
-    if candleInterval=='60m':
-        candle_change=3
-        exit_after_candles = 2
-        value_of_candle = 100000000
-        enter_after_candles = 1
-        rsi_high=80
-        rsi_low=20
-    if candleInterval=='1d':
-        value_of_candle = 500000000
-        exit_after_candles = 1
-        enter_after_candles = 1
-        rsi_high=70
-        rsi_low=30
+
     capital = 10000
     gap_today = 1
     intraday_capital = capital*5
@@ -87,29 +54,8 @@ def volume_indication(data,candleInterval,backtesting_flag,tradeType):
         total_taxes = 0
         total_brokerage = 0 # Algo flat charges # manual 40 Rs
     ticker_trade_rows = pd.DataFrame()
-    if tradeType =='swing':
-        bullish_indices_oversell = np.where((data['DistanceBetweenClose_SMA650'] < -10) & (data['RSI_25']<=30) & (data['Volume']*data['Open'] >= value_of_candle) & (data['MaVariance_Month15']<=-2) & (data['CandleChange'].shift(-1)>= 0.25) & (data['CandleChange'] >= 0.5))[0].tolist()
-        bearish_indices_overbuy = np.where((data['DistanceBetweenClose_SMA650'] > 10) & (data['RSI_25']>=70) & (data['Volume']*data['Open'] >= value_of_candle) & (data['MaVariance_Month15']>=2) & (data['CandleChange'] <= -0.5) & (data['CandleChange'].shift(-1) <= -0.25))[0].tolist()
-        bullish_indices_bullreturn = np.where((data['MaVariance_Month15']>5) & (data['DistanceBetweenOpen_SMA225']<0) & (data['DistanceBetweenOpen_SMA225']>=-5) & (data['RSI_25']<=25) & (data['Volume']*data['Open'] >= value_of_candle) & (data['CandleChange'].shift(-1)>= 0.25) & (data['CandleChange'] >= 0.5))[0].tolist()
-        bearish_indices_bearreturn = np.where((data['MaVariance_Month15']<-5) & (data['DistanceBetweenOpen_SMA225']>0) & (data['DistanceBetweenOpen_SMA225']<=5) & (data['RSI_25']>=75) & (data['Volume']*data['Open'] >= value_of_candle) & (data['CandleChange'] <= -0.5) & (data['CandleChange'].shift(-1) <= -0.25))[0].tolist()
-        bullish_indices_meanRSI = np.where((data['MaVariance_Month15']>4) & (data['RSI_25']<=30))[0].tolist()
-        bearish_indices_meanRSI = np.where((data['MaVariance_Month15']<-4) & (data['RSI_25']>=70))[0].tolist()        
-        #bullish_indices= bullish_indices_oversell + bullish_indices_bullreturn + bullish_indices_meanRSI
-        #bearish_indices= bearish_indices_overbuy + bearish_indices_bearreturn + bearish_indices_meanRSI
-        bullish_indices= bullish_indices_meanRSI
-        bearish_indices= bearish_indices_meanRSI
-    else:
-        #bullish_indices_oversell = np.where((data['DistanceBetweenClose_SMA650'] < -10) & (data['RSI_25']<=30) & (data['Volume']*data['Open'] >= value_of_candle) & (data['MaVariance_Month15']<=-2) & (data['CandleChange'] >= 0.5) & (data['CandleChange'].shift(-1)>= 0.25))[0].tolist()
-        #bearish_indices_overbuy = np.where((data['DistanceBetweenClose_SMA650'] > 10) & (data['RSI_25']>=70) & (data['Volume']*data['Open'] >= value_of_candle) & (data['MaVariance_Month15']>=2) & (data['CandleChange'] <= -0.5) & (data['CandleChange'].shift(-1) <= -0.25))[0].tolist()
-        #bullish_indices_bullreturn = np.where((data['MaVariance_Month15']>5) & (data['DistanceBetweenOpen_SMA225']<0) & (data['DistanceBetweenOpen_SMA225']>=-5) & (data['RSI_25']<=25) & (data['Volume']*data['Open'] >= value_of_candle) & (data['CandleChange'].shift(-1)>= 0.25) & (data['CandleChange'] >= 0.5))[0].tolist()
-        #bearish_indices_bearreturn = np.where((data['MaVariance_Month15']<-5) & (data['DistanceBetweenOpen_SMA225']>0) & (data['DistanceBetweenOpen_SMA225']<=5) & (data['RSI_25']>=75) & (data['Volume']*data['Open'] >= value_of_candle) & (data['CandleChange'] <= -0.5) & (data['CandleChange'].shift(-1) <= -0.25))[0].tolist() 
-        bullish_indices_meanRSI = np.where((data['MaVariance_Month15']>4) & (data['RSI_25']<=30))[0].tolist()
-        bearish_indices_meanRSI = np.where((data['MaVariance_Month15']<-4) & (data['RSI_25']>=70))[0].tolist()        
-        #bullish_indices= bullish_indices_oversell + bullish_indices_bullreturn + bullish_indices_meanRSI
-        #bearish_indices= bearish_indices_overbuy + bearish_indices_bearreturn + bearish_indices_meanRSI
-        bullish_indices= bullish_indices_meanRSI
-        bearish_indices = bearish_indices_meanRSI
-
+    bullish_indices = np.where((data['Volume']>data['AverageVolume']) & (data['CandleChange']>=1) & (data['Low_Wick'].abs()<=0.05) & (data['High_Wick'].abs()<=0.05) & (data['Gap_Open']>0) & (data['Gap_Open']<1))[0].tolist() 
+    bearish_indices = np.where((data['Volume']>data['AverageVolume']) & (data['CandleChange']<=-1) & (data['Low_Wick'].abs()<=0.05) & (data['High_Wick'].abs()<=0.05) & (data['Gap_Open']<0) & (data['Gap_Open']>-1))[0].tolist()
     bullish_found_rows = data.iloc[bullish_indices]
     bearish_found_rows = data.iloc[bearish_indices]    
     bullish_found_rows['Type'] = 'Buy'
@@ -148,8 +94,6 @@ def volume_indication(data,candleInterval,backtesting_flag,tradeType):
             bearish_rows['Type'] ='Sell'
             swing_trade_rows = bearish_rows
             ticker_trade_rows=pd.concat([swing_trade_rows,ticker_trade_rows], ignore_index=True)
-        if len(ticker_trade_rows) >=1:
-            ticker_trade_rows.loc[ticker_trade_rows['Profit'] < -500, 'Profit'] = -500
         return ticker_trade_rows                
     elif backtesting_flag and tradeType=='intraday':
         for row in trading_rows.itertuples():
@@ -164,10 +108,10 @@ def volume_indication(data,candleInterval,backtesting_flag,tradeType):
                 bull_exit = od_data.iloc[[bullish_exit_index]]
                 bull_exit2 = bull_exit.rename(columns={'Time': 'ExitTime', 'Close': 'Exit_Price'})
                 bullish_rows = pd.concat([bullish_rows.reset_index(drop=True), bull_exit2[['ExitTime', 'Exit_Price']].reset_index(drop=True)], axis=1)
-                bullish_rows['EntryPrice']= bullish_rows['Open']          
+                bullish_rows['EntryPrice'] = bullish_rows['Open']          
                 bullish_rows['Quantity'] = intraday_capital/bullish_rows['EntryPrice']
                 bullish_rows['Change'] = bullish_rows['Exit_Price']-bullish_rows['EntryPrice']
-                bullish_rows['Profit'] = bullish_rows['Change']*bullish_rows['Quantity']
+                bullish_rows['Profit'] = bullish_rows['Change']*bullish_rows['Quantity']-40
                 bullish_rows['Type'] ='Buy'
                 one_day_rows = bullish_rows
                 ticker_trade_rows=pd.concat([one_day_rows,ticker_trade_rows], ignore_index=True)
@@ -181,15 +125,13 @@ def volume_indication(data,candleInterval,backtesting_flag,tradeType):
                 bear_exit = od_data.iloc[[bearish_exit_index]]
                 bear_exit2 = bear_exit.rename(columns={'Time': 'ExitTime', 'Close': 'Exit_Price'})
                 bearish_rows = pd.concat([bearish_rows.reset_index(drop=True), bear_exit2[['ExitTime', 'Exit_Price']].reset_index(drop=True)], axis=1)
-                bearish_rows['EntryPrice']=bearish_rows['Open']
+                bearish_rows['EntryPrice']=bearish_rows['Close']
                 bearish_rows['Quantity'] = intraday_capital/bearish_rows['EntryPrice']
                 bearish_rows['Change'] = bearish_rows['EntryPrice']-bearish_rows['Exit_Price']
-                bearish_rows['Profit'] = bearish_rows['Change']*bearish_rows['Quantity']
+                bearish_rows['Profit'] = bearish_rows['Change']*bearish_rows['Quantity']-40
                 bearish_rows['Type'] ='Sell'
                 one_day_rows = bearish_rows
                 ticker_trade_rows=pd.concat([one_day_rows,ticker_trade_rows], ignore_index=True)
-        if len(ticker_trade_rows) >=1:
-            ticker_trade_rows.loc[ticker_trade_rows['Profit'] < -500, 'Profit'] = -500
         return ticker_trade_rows
     else:
         return trading_rows
