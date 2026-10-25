@@ -3,5 +3,4 @@ nsepy
 yfinance>=0.2.18
 nsepython
 nselib
-ta-lib
 tabulate
