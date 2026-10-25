@@ -7,7 +7,6 @@ from datetime import datetime, date, timedelta
 from ModelBuilder import calculate_rsi, calculate_vwap
 import time
 import pytz
-import talib as ta
 
 
 
