@@ -15,7 +15,7 @@ def volume_momentum():
     #df_excel = pd.read_csv("AllOptionsStocks-All.csv")
     #df_excel = pd.read_csv('Nifty100.csv')
     df_excel = pd.read_csv('OptionsAll.csv')
-    backtesting_flag= True
+    backtesting_flag= False
     tradeType='intraday'
     backtesting_result=pd.DataFrame()
     for item in time_intervals:
