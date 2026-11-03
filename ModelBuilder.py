@@ -90,7 +90,7 @@ def volume_indication(data,candleInterval,backtesting_flag,tradeType):
     )
 
     
-    trading_rows = pd.concat([bullish_found_rows,bearish_found_rows], ignore_index=True)
+    #trading_rows = pd.concat([bullish_found_rows,bearish_found_rows], ignore_index=True)
     if backtesting_flag == True:
         for row in trading_rows.itertuples():
             od_data = data[(data['DateStr'] == row.DateStr)]
