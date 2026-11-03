@@ -79,8 +79,17 @@ def volume_indication(data,candleInterval,backtesting_flag,tradeType):
     bearish_entry_indices = [index-enter_after_candles for index in bearish_indices]   
     bullish_found_rows = data.iloc[bullish_entry_indices]
     bearish_found_rows = data.iloc[bearish_entry_indices]
-    bullish_found_rows['Type'] = 'Buy'
-    bearish_found_rows['Type'] = 'Sell'
+    #bullish_found_rows['Type'] = 'Buy'
+    #bearish_found_rows['Type'] = 'Sell'
+    trading_rows = pd.concat(
+        [
+            bullish_found_rows.assign(Type="Buy"),
+            bearish_found_rows.assign(Type="Sell"),
+        ],
+        ignore_index=True,
+    )
+
+    
     trading_rows = pd.concat([bullish_found_rows,bearish_found_rows], ignore_index=True)
     if backtesting_flag == True:
         for row in trading_rows.itertuples():
