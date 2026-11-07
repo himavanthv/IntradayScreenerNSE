@@ -39,16 +39,21 @@ def live_filter(data, interval):
 
 
 def volume_indication(data,candleInterval,backtesting_flag,tradeType):
+    #print(tradeType)
     data['Candle_Interval']=candleInterval
     data['Model']='VolumeBased'
 ## ------------------ Configuration Based on Different Candle Intervals -----------------##
     if candleInterval =='15m':
-        exit_after_candles = 18
+        exit_after_candles = 40
         value_of_candle = 50000000
         enter_after_candles = 1
     capital = 10000
     gap_today = 1
     intraday_capital = capital*5
+
+    total_taxes = 0
+    total_brokerage = 0 # Algo flat charges # manual 40 Rs
+    square_off_charges = 0
 
 
     if tradeType =='intraday':
@@ -67,20 +72,18 @@ def volume_indication(data,candleInterval,backtesting_flag,tradeType):
     #bullish_indices = np.where((data['CandleChange'].shift(-5)<0) & (data['CandleChange'].shift(-4)<0) & (data['CandleChange'].shift(-3)<0) & (data['CandleChange'].shift(-2)<0) & (data['CandleChange'].shift(-1)<0) & (data['RSI']<30) & (data['DistanceBetweenPrevClose_650']<=-5) & (data['CrossOver']==1) & (data['DistanceFromMA9_Close']>0))[0].tolist()
     #bearish_indices = np.where((data['CandleChange'].shift(-5)>0) & (data['CandleChange'].shift(-4)>0) & (data['CandleChange'].shift(-3)>0) & (data['CandleChange'].shift(-2)>0) & (data['CandleChange'].shift(-1)>0) & (data['RSI']>70) & (data['DistanceBetweenPrevClose_650']>=5) & (data['CrossOver']==-1) & (data['DistanceFromMA9_Close']<0))[0].tolist()
     
-    bullish_indices = np.where((data['ChangeSinceYesterday']>1) & (data['MaVariance_Month15']<0) & (data['SMA_650'].shift(-1)>data['SMA_650'].shift(-2)) & (data['SMA_650'].shift(-2)>data['SMA_650'].shift(-3)) & (data['SMA_650'].shift(-3)>data['SMA_650'].shift(-4)) & (data['SMA_650'].shift(-4)>data['SMA_650'].shift(-5)) & (data['SMA_650'].shift(-5)>data['SMA_650'].shift(-6)) & (data['SMA_650'].shift(-6)>data['SMA_650'].shift(-7)) & (data['SMA_650'].shift(-7)>data['SMA_650'].shift(-8)) & (data['SMA_225'].shift(-1)>data['SMA_225'].shift(-2)) & (data['SMA_225'].shift(-2)>data['SMA_225'].shift(-3)) & (data['SMA_225'].shift(-3)>data['SMA_225'].shift(-4)) & (data['SMA_225'].shift(-4)>data['SMA_225'].shift(-5)) & (data['SMA_225'].shift(-5)>data['SMA_225'].shift(-6)) & (data['SMA_225'].shift(-6)>data['SMA_225'].shift(-7)) & (data['SMA_225'].shift(-7)>data['SMA_225'].shift(-8)) & (data['CrossOver9_650']==1))[0].tolist()
-    bearish_indices = np.where((data['ChangeSinceYesterday']<1) & (data['MaVariance_Month15']>0) & (data['SMA_650'].shift(-1)<data['SMA_650'].shift(-2)) & (data['SMA_650'].shift(-2)<data['SMA_650'].shift(-3)) & (data['SMA_650'].shift(-3)<data['SMA_650'].shift(-4)) & (data['SMA_650'].shift(-4)<data['SMA_650'].shift(-5)) & (data['SMA_650'].shift(-5)<data['SMA_650'].shift(-6)) & (data['SMA_650'].shift(-6)<data['SMA_650'].shift(-7)) & (data['SMA_650'].shift(-7)<data['SMA_650'].shift(-8)) & (data['SMA_225'].shift(-1)<data['SMA_225'].shift(-2)) & (data['SMA_225'].shift(-2)<data['SMA_225'].shift(-3)) & (data['SMA_225'].shift(-3)<data['SMA_225'].shift(-4)) & (data['SMA_225'].shift(-4)<data['SMA_225'].shift(-5)) & (data['SMA_225'].shift(-5)<data['SMA_225'].shift(-6)) & (data['SMA_225'].shift(-6)<data['SMA_225'].shift(-7)) & (data['SMA_225'].shift(-7)<data['SMA_225'].shift(-8)) & (data['CrossOver9_650']==-1))[0].tolist()
-
-
+    bullish_indices = np.where((data['ChangeSinceYesterday']>1) & (data['MaVariance_Month15']<0) & (data['SMA_650'].shift(-1)>data['SMA_650'].shift(-2)) & (data['SMA_650'].shift(-2)>data['SMA_650'].shift(-3)) & (data['SMA_650'].shift(-3)>data['SMA_650'].shift(-4)) & (data['SMA_650'].shift(-4)>data['SMA_650'].shift(-5)) & (data['SMA_650'].shift(-5)>data['SMA_650'].shift(-6)) & (data['SMA_650'].shift(-6)>data['SMA_650'].shift(-7)) & (data['SMA_650'].shift(-7)>data['SMA_650'].shift(-8)) & (data['SMA_225'].shift(-1)>data['SMA_225'].shift(-2)) & (data['SMA_225'].shift(-2)>data['SMA_225'].shift(-3)) & (data['SMA_225'].shift(-3)>data['SMA_225'].shift(-4)) & (data['SMA_225'].shift(-4)>data['SMA_225'].shift(-5)) & (data['SMA_225'].shift(-5)>data['SMA_225'].shift(-6)) & (data['SMA_225'].shift(-6)>data['SMA_225'].shift(-7)) & (data['SMA_225'].shift(-7)>data['SMA_225'].shift(-8)) & (data['CrossOver9_650']==1) & (data['RSI']>70))[0].tolist()
+    bearish_indices = np.where((data['ChangeSinceYesterday']<-1) & (data['MaVariance_Month15']>0) & (data['SMA_650'].shift(-1)<data['SMA_650'].shift(-2)) & (data['SMA_650'].shift(-2)<data['SMA_650'].shift(-3)) & (data['SMA_650'].shift(-3)<data['SMA_650'].shift(-4)) & (data['SMA_650'].shift(-4)<data['SMA_650'].shift(-5)) & (data['SMA_650'].shift(-5)<data['SMA_650'].shift(-6)) & (data['SMA_650'].shift(-6)<data['SMA_650'].shift(-7)) & (data['SMA_650'].shift(-7)<data['SMA_650'].shift(-8)) & (data['SMA_225'].shift(-1)<data['SMA_225'].shift(-2)) & (data['SMA_225'].shift(-2)<data['SMA_225'].shift(-3)) & (data['SMA_225'].shift(-3)<data['SMA_225'].shift(-4)) & (data['SMA_225'].shift(-4)<data['SMA_225'].shift(-5)) & (data['SMA_225'].shift(-5)<data['SMA_225'].shift(-6)) & (data['SMA_225'].shift(-6)<data['SMA_225'].shift(-7)) & (data['SMA_225'].shift(-7)<data['SMA_225'].shift(-8)) & (data['CrossOver9_650']==-1) & (data['RSI']<30))[0].tolist()
     #CrossOver9_650
-
-
-
     bullish_entry_indices = [index-enter_after_candles for index in bullish_indices]
     bearish_entry_indices = [index-enter_after_candles for index in bearish_indices]   
     bullish_found_rows = data.iloc[bullish_entry_indices]
     bearish_found_rows = data.iloc[bearish_entry_indices]
-    #bullish_found_rows['Type'] = 'Buy'
-    #bearish_found_rows['Type'] = 'Sell'
+    # bullish_found_rows['Type'] = 'Buy'
+    # bearish_found_rows['Type'] = 'Sell'
+
+    # trading_rows = pd.concat([bullish_found_rows,bearish_found_rows], ignore_index=True)
+    # Combine and assign the 'Type' column in a single, safe pipeline
     trading_rows = pd.concat(
         [
             bullish_found_rows.assign(Type="Buy"),
@@ -89,9 +92,7 @@ def volume_indication(data,candleInterval,backtesting_flag,tradeType):
         ignore_index=True,
     )
 
-    
-    #trading_rows = pd.concat([bullish_found_rows,bearish_found_rows], ignore_index=True)
-    if backtesting_flag == True:
+    if backtesting_flag == True and tradeType=='intraday':
         for row in trading_rows.itertuples():
             od_data = data[(data['DateStr'] == row.DateStr)]
             od_data = od_data.reset_index()
@@ -119,6 +120,45 @@ def volume_indication(data,candleInterval,backtesting_flag,tradeType):
                     bearish_exit_index = 0
                 bearish_rows = od_data.iloc[[bearish_entry_index]]
                 bear_exit = od_data.iloc[[bearish_exit_index]]
+                bear_exit2 = bear_exit.rename(columns={'Time': 'ExitTime', 'Close': 'Exit_Price'})
+                bearish_rows = pd.concat([bearish_rows.reset_index(drop=True), bear_exit2[['ExitTime', 'Exit_Price']].reset_index(drop=True)], axis=1)
+                bearish_rows['EntryPrice']=bearish_rows['Close']
+                bearish_rows['Quantity'] = intraday_capital/bearish_rows['EntryPrice']
+                bearish_rows['Change'] = bearish_rows['EntryPrice']-bearish_rows['Exit_Price']
+                bearish_rows['Profit'] = bearish_rows['Change']*bearish_rows['Quantity']-40-square_off_charges
+                bearish_rows['Type'] ='Sell'
+                one_day_rows = bearish_rows
+                ticker_trade_rows=pd.concat([one_day_rows,ticker_trade_rows], ignore_index=True)
+        return ticker_trade_rows
+    if backtesting_flag == True and tradeType=='swing':
+        #print(tradeType)
+        for row in trading_rows.itertuples():
+            # od_data = data[(data['DateStr'] == row.DateStr)]
+            data = data.reset_index()
+            #print(type(row.Gap_Open))
+            if (row.Type == 'Buy'):
+                bullish_entry_index = np.where((data['Time']==row.Time))[0].tolist()[0]
+                bullish_exit_index = bullish_entry_index - exit_after_candles
+                if bullish_exit_index<0:
+                    bullish_exit_index=0
+                bullish_rows = data.iloc[[bullish_entry_index]]
+                bull_exit = data.iloc[[bullish_exit_index]]
+                bull_exit2 = bull_exit.rename(columns={'Time': 'ExitTime', 'Close': 'Exit_Price'})
+                bullish_rows = pd.concat([bullish_rows.reset_index(drop=True), bull_exit2[['ExitTime', 'Exit_Price']].reset_index(drop=True)], axis=1)
+                bullish_rows['EntryPrice'] = bullish_rows['Close']          
+                bullish_rows['Quantity'] = intraday_capital/bullish_rows['EntryPrice']
+                bullish_rows['Change'] = bullish_rows['Exit_Price']-bullish_rows['EntryPrice']
+                bullish_rows['Profit'] = bullish_rows['Change']*bullish_rows['Quantity']-40-square_off_charges
+                bullish_rows['Type'] ='Buy'
+                one_day_rows = bullish_rows
+                ticker_trade_rows=pd.concat([one_day_rows,ticker_trade_rows], ignore_index=True)
+            elif (row.Type =='Sell'):
+                bearish_entry_index = np.where((data['Time']==row.Time))[0].tolist()[0]
+                bearish_exit_index = bearish_entry_index - exit_after_candles
+                if bearish_exit_index < 0:
+                    bearish_exit_index = 0
+                bearish_rows = data.iloc[[bearish_entry_index]]
+                bear_exit = data.iloc[[bearish_exit_index]]
                 bear_exit2 = bear_exit.rename(columns={'Time': 'ExitTime', 'Close': 'Exit_Price'})
                 bearish_rows = pd.concat([bearish_rows.reset_index(drop=True), bear_exit2[['ExitTime', 'Exit_Price']].reset_index(drop=True)], axis=1)
                 bearish_rows['EntryPrice']=bearish_rows['Close']
