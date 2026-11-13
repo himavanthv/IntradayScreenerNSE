@@ -12,7 +12,7 @@ def volume_momentum():
     time_intervals=['15m']
     #df_excel = pd.read_csv("AllOptionsStocks-Test.csv")
     #df_excel = pd.read_csv("AllOptionsStocks.csv")
-    #df_excel = pd.read_csv("AllOptionsStocks-All.csv")
+    df_excel = pd.read_csv("AllOptionsStocks-All.csv")
     #df_excel = pd.read_csv('Nifty100.csv')
     #df_excel = pd.read_csv('OptionsAll.csv')
     backtesting_flag= False
